@@ -1,0 +1,292 @@
+/* Soccer Field Theme Styles */
+
+:root {
+  /* Soccer Field Color Palette */
+  --field-green: 46, 125, 50;
+  --field-green-light: 76, 175, 80;
+  --field-green-dark: 27, 94, 32;
+  --field-white: 255, 255, 255;
+  --field-yellow: 255, 215, 0;
+  --field-red: 220, 38, 38;
+  --stadium-blue: 25, 118, 210;
+  --grass-texture: linear-gradient(180deg, #2e7d32 0%, #388e3c 50%, #2e7d32 100%);
+  
+  /* Field Pattern Variables */
+  --field-line-width: 2px;
+  --field-line-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Soccer Field Background Patterns */
+.soccer-field-pattern {
+  position: relative;
+  background: linear-gradient(180deg, #2e7d32 0%, #388e3c 100%);
+  background-size: 100% 100%;
+}
+
+.soccer-field-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(90deg, 
+      transparent, 
+      transparent 98px, 
+      rgba(255, 255, 255, 0.1) 98px, 
+      rgba(255, 255, 255, 0.1) 102px
+    );
+  pointer-events: none;
+}
+
+/* Goal Net Pattern for Headers */
+.goal-net-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-net-pattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(45deg, transparent 48%, rgba(0,0,0,0.02) 49%, rgba(0,0,0,0.02) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(0,0,0,0.02) 49%, rgba(0,0,0,0.02) 51%, transparent 52%);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Soccer Ball Animation */
+@keyframes soccerBallBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-20px) rotate(90deg); }
+  50% { transform: translateY(0) rotate(180deg); }
+  75% { transform: translateY(-10px) rotate(270deg); }
+}
+
+@keyframes soccerBallRoll {
+  from { transform: translateX(-100%) rotate(0deg); }
+  to { transform: translateX(100%) rotate(360deg); }
+}
+
+@keyframes goalCelebration {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Stadium Lights Effect */
+@keyframes stadiumLights {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.stadium-lights {
+  background: radial-gradient(ellipse at top, rgba(255,255,255,0.2) 0%, transparent 70%);
+  animation: stadiumLights 3s ease-in-out infinite;
+}
+
+/* Soccer Ball Icon */
+.soccer-ball {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.soccer-ball::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: 
+    conic-gradient(from 0deg at 50% 50%, 
+      black 0deg, black 72deg, 
+      white 72deg, white 144deg,
+      black 144deg, black 216deg,
+      white 216deg, white 288deg,
+      black 288deg, black 360deg
+    );
+  opacity: 0.8;
+}
+
+/* Field Position Indicators */
+.field-position {
+  position: relative;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, rgba(46,125,50,0.1) 0%, rgba(46,125,50,0) 100%);
+  border-left: 3px solid rgb(46,125,50);
+}
+
+/* Tactical Card Style */
+.tactical-card {
+  background: white;
+  border: 2px solid rgba(46,125,50,0.2);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tactical-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  height: 4px;
+  background: linear-gradient(90deg, #2e7d32, #4caf50, #2e7d32);
+  background-size: 200% 100%;
+  animation: fieldGradient 3s linear infinite;
+}
+
+@keyframes fieldGradient {
+  from { background-position: 0% 0; }
+  to { background-position: 200% 0; }
+}
+
+/* Whistle Button Effect */
+.whistle-button {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.whistle-button:hover {
+  transform: scale(1.05);
+}
+
+.whistle-button:active {
+  transform: scale(0.98);
+}
+
+.whistle-button::after {
+  content: '🎯';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 20px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.whistle-button:hover::after {
+  opacity: 1;
+  transform: rotate(15deg);
+}
+
+/* Trophy Complete Animation */
+.trophy-complete {
+  animation: goalCelebration 0.6s ease;
+}
+
+/* Yellow Card Warning */
+.yellow-card-warning {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border: 2px solid #f59e0b;
+  color: #92400e;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+}
+
+/* Red Card Error */
+.red-card-error {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  border: 2px solid #991b1b;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
+}
+
+/* Formation Grid */
+.formation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 24px;
+  background: 
+    linear-gradient(180deg, rgba(46,125,50,0.05) 0%, rgba(46,125,50,0.1) 100%);
+  border-radius: 8px;
+}
+
+/* Match Timer Style */
+.match-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: #1a1a1a;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.match-timer::before {
+  content: '⏱️';
+  font-size: 16px;
+}
+
+/* Substitution Arrow */
+.substitution-arrow {
+  display: inline-block;
+  position: relative;
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.substitution-arrow::after {
+  content: '↔️';
+  margin: 0 8px;
+  animation: substitutionPulse 2s ease-in-out infinite;
+}
+
+@keyframes substitutionPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* Corner Flag Markers */
+.corner-flag {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.corner-flag.top-left {
+  top: 0;
+  left: 0;
+  border-width: 20px 20px 0 0;
+  border-color: #ffd700 transparent transparent transparent;
+}
+
+.corner-flag.top-right {
+  top: 0;
+  right: 0;
+  border-width: 20px 0 0 20px;
+  border-color: #ffd700 transparent transparent transparent;
+}
+
+/* Penalty Box Focus */
+.penalty-box-focus {
+  position: relative;
+  border: 2px dashed rgba(255,255,255,0.5);
+  background: rgba(46,125,50,0.1);
+  border-radius: 4px;
+}
+
+.penalty-box-focus::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(46,125,50,0.5);
+}

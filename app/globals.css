@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Soccer Theme */
+@import './soccer-theme.css';
+
+@layer base {
+  :root {
+    /* Enhanced Color System with Soccer Theme */
+    --background: 0 0% 100%;
+    --foreground: 140 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 140 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 30% 15%;
+
+    --primary: 140 50% 35%; /* Soccer field green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 140 20% 96%;
+    --secondary-foreground: 140 50% 20%;
+
+    --muted: 140 10% 95%;
+    --muted-foreground: 140 15% 45%;
+
+    --accent: 45 100% 50%; /* Trophy gold */
+    --accent-foreground: 140 50% 20%;
+
+    --destructive: 0 84.2% 50%; /* Red card */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 140 20% 90%;
+    --input: 140 20% 92%;
+    --ring: 140 50% 35%;
+
+    --radius: 0.5rem;
+    
+    /* Soccer Field Colors */
+    --field-green: 140 50% 35%;
+    --field-green-light: 140 45% 50%;
+    --field-green-dark: 140 55% 25%;
+    --stadium-blue: 207 70% 45%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Design System Components */
+@layer components {
+  /* Button Hierarchy with Soccer Theme */
+  .btn-primary {
+    @apply px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg 
+           transition-all duration-200 hover:scale-[1.02] hover:shadow-md
+           focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+           relative overflow-hidden;
+  }
+  
+  .btn-primary::before {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
+           -translate-x-full hover:translate-x-full transition-transform duration-500;
+    content: '';
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-green-50 hover:bg-green-100 text-green-800 font-medium rounded-lg 
+           transition-all duration-200 hover:scale-[1.02] border border-green-200
+           focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2;
+  }
+  
+  .btn-ghost {
+    @apply px-3 py-2 hover:bg-green-50 text-green-700 rounded-lg 
+           transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg 
+           transition-all duration-200 hover:scale-[1.02] hover:shadow-md
+           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+  
+  .btn-icon {
+    @apply p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6
+           hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .card-compact {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 p-4;
+  }
+
+  /* Input Styles */
+  .input-base {
+    @apply px-4 py-2 border border-gray-300 rounded-lg text-gray-900
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+           transition-colors duration-200;
+  }
+  
+  .input-sm {
+    @apply px-3 py-1.5 text-sm border border-gray-300 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           transition-colors duration-200;
+  }
+  
+  .select-base {
+    @apply px-3 py-2 border border-gray-300 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           transition-all duration-200 bg-white cursor-pointer;
+  }
+
+  /* Typography */
+  .text-heading {
+    @apply text-2xl font-semibold text-gray-900;
+  }
+  
+  .text-subheading {
+    @apply text-lg font-medium text-gray-800;
+  }
+  
+  .text-body {
+    @apply text-base text-gray-700;
+  }
+  
+  .text-caption {
+    @apply text-sm text-gray-600;
+  }
+  
+  .text-helper {
+    @apply text-xs text-gray-500;
+  }
+
+  /* Animations */
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+/* Custom scrollbar */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+  }
+  
+  .hover-glow {
+    @apply hover:shadow-xl hover:shadow-blue-100 transition-all duration-200;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes soccerBallBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes soccerBallRoll {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
