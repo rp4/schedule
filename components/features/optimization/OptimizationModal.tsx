@@ -149,12 +149,22 @@ export function OptimizationModal({ onClose }: OptimizationModalProps) {
 
     // Add suggested assignments
     results.suggestions.forEach(suggestion => {
+      // Convert week string (e.g., "JAN 1") to date format (yyyy-MM-dd)
+      // The week field in placeholders should already be in the correct format
+      // but we need to ensure date field is properly set
+      const assignment = allAssignments.find(a =>
+        a.projectId === suggestion.projectId &&
+        a.week === suggestion.week &&
+        (!a.employeeId || a.employeeId === 'Placeholder' ||
+         a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder '))
+      )
+
       filtered.push({
         id: `${suggestion.suggestedEmployeeId}-${suggestion.projectId}-${suggestion.week}`,
         employeeId: suggestion.suggestedEmployeeId,
         projectId: suggestion.projectId,
         week: suggestion.week,
-        date: suggestion.week, // Use week as date for now
+        date: assignment?.date || suggestion.week, // Use the original placeholder's date field if available
         hours: suggestion.originalHours,
       })
     })
