@@ -24,3 +24,6 @@ coverage/
 # TypeScript build info
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Project documentation
+CLAUDE.md

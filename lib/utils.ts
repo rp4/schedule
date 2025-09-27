@@ -15,7 +15,7 @@ export function formatDate(date: Date | string | null): string {
   return d.toISOString().split('T')[0]
 }
 
-export function parseDate(dateValue: any): Date | null {
+export function parseDate(dateValue: Date | string | number | null | undefined): Date | null {
   if (!dateValue) return null
   if (dateValue instanceof Date) return dateValue
   if (typeof dateValue === 'number') {
