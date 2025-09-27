@@ -106,12 +106,14 @@ export const useScheduleStore = create<ScheduleState>()(
         if (data.assignments.length > 500) {
           initializeIncrementalMetrics(data.employees, data.projects, data.assignments)
         }
-        
-        return set(() => ({
+
+        return set((state) => ({
           ...data,
           teams: ['All Teams', ...Array.from(new Set(data.employees.map(e => e.team).filter((t): t is string => Boolean(t))))],
-          // Reset date range when loading new data so it recalculates based on new project dates
-          dateRange: null,
+          // Preserve the selected team to maintain the filter
+          selectedTeam: state.selectedTeam,
+          // Preserve the date range to maintain consistent utilization calculations
+          dateRange: state.dateRange,
         }))
       },
 

@@ -434,7 +434,7 @@ function applysuggestions(
     // Create a unique key for each placeholder that was replaced
     replacedPlaceholders.add(`${suggestion.projectId}-${suggestion.week}`)
   })
-  
+
   // Keep non-placeholder assignments and unreplaced placeholders
   const filtered = assignments.filter(a => {
     const isPlaceholder = !a.employeeId || (
@@ -442,29 +442,37 @@ function applysuggestions(
       a.employeeId === 'placeholder' ||
       a.employeeId.startsWith('Placeholder ')
     )
-    
+
     if (!isPlaceholder) {
       // Keep all non-placeholder assignments
       return true
     }
-    
+
     // For placeholders, check if they were replaced
     const placeholderKey = `${a.projectId}-${a.week || a.date}`
     return !replacedPlaceholders.has(placeholderKey)
   })
-  
+
   // Add suggested assignments
   suggestions.forEach(suggestion => {
+    // Find the original placeholder assignment to get the correct date field
+    const originalPlaceholder = assignments.find(a =>
+      a.projectId === suggestion.projectId &&
+      a.week === suggestion.week &&
+      (!a.employeeId || a.employeeId === 'Placeholder' ||
+       a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder '))
+    )
+
     filtered.push({
       id: `${suggestion.suggestedEmployeeId}-${suggestion.projectId}-${suggestion.week}`,
       employeeId: suggestion.suggestedEmployeeId,
       projectId: suggestion.projectId,
       week: suggestion.week,
-      date: suggestion.week, // Use week as date for now
+      date: originalPlaceholder?.date || suggestion.week, // Use the original placeholder's date field
       hours: suggestion.originalHours,
     })
   })
-  
+
   return filtered
 }
 

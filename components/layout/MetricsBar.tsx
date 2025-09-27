@@ -10,14 +10,54 @@ import { useRouter, usePathname } from 'next/navigation'
 
 // Memoized component to prevent unnecessary re-renders
 export const MetricsBar = React.memo(function MetricsBar() {
-  const employees = useScheduleStore((state) => state.employees)
-  const projects = useScheduleStore((state) => state.projects)
-  const assignments = useScheduleStore((state) => state.assignments)
+  const allEmployees = useScheduleStore((state) => state.employees)
+  const allProjects = useScheduleStore((state) => state.projects)
+  const allAssignments = useScheduleStore((state) => state.assignments)
   const dateRange = useScheduleStore((state) => state.dateRange)
+  const selectedTeam = useScheduleStore((state) => state.selectedTeam)
   const setOvertimeSortTrigger = useScheduleStore((state) => state.setOvertimeSortTrigger)
   const setUtilizationSortTrigger = useScheduleStore((state) => state.setUtilizationSortTrigger)
   const router = useRouter()
   const pathname = usePathname()
+
+  // Filter data based on selected team - same logic as OptimizationModal
+  const { employees, projects, assignments } = useMemo(() => {
+    if (selectedTeam === 'All Teams') {
+      return { employees: allEmployees, projects: allProjects, assignments: allAssignments }
+    }
+
+    // Filter employees by team
+    const teamEmployees = allEmployees.filter(e => e.team === selectedTeam)
+    const teamEmployeeIds = new Set(teamEmployees.map(e => e.id))
+
+    // Find projects that have assignments from team members
+    const projectsWithTeamMembers = new Set<string>()
+    allAssignments.forEach(a => {
+      const employee = allEmployees.find(e => e.id === a.employeeId || e.name === a.employeeId)
+      if (employee && teamEmployeeIds.has(employee.id)) {
+        projectsWithTeamMembers.add(a.projectId)
+        const project = allProjects.find(p => p.id === a.projectId || p.name === a.projectId)
+        if (project) {
+          projectsWithTeamMembers.add(project.id)
+        }
+      }
+    })
+
+    // Filter projects that team members work on
+    const teamProjects = allProjects.filter(p =>
+      projectsWithTeamMembers.has(p.id) || projectsWithTeamMembers.has(p.name)
+    )
+
+    // Filter assignments to only include those for filtered projects
+    const filteredProjectIds = new Set(teamProjects.map(p => p.id))
+    const teamAssignments = allAssignments.filter(a => filteredProjectIds.has(a.projectId))
+
+    return {
+      employees: teamEmployees,
+      projects: teamProjects,
+      assignments: teamAssignments
+    }
+  }, [allEmployees, allProjects, allAssignments, selectedTeam])
 
   // Filter assignments based on date range
   const filteredAssignments = useMemo(() => {
@@ -52,7 +92,7 @@ export const MetricsBar = React.memo(function MetricsBar() {
   const metrics = useMemo(() => {
     // Use incremental metrics for large datasets, fallback to regular calculation for small ones
     const USE_INCREMENTAL_THRESHOLD = 500 // Use incremental if > 500 assignments
-    
+
     if (filteredAssignments.length > USE_INCREMENTAL_THRESHOLD) {
       // Initialize incremental calculator if needed
       initializeIncrementalMetrics(employees, projects, filteredAssignments)

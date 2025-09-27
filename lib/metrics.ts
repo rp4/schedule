@@ -28,14 +28,14 @@ export function calculateResourceUtilization(
 ): number {
   // Early exit for empty data
   if (!employees.length) return 0
-  
+
   let numPeriods: number
-  
+
   if (dateRange?.start && dateRange?.end) {
     // Calculate number of weeks between start and end dates
     const start = dateRange.start instanceof Date ? dateRange.start : new Date(dateRange.start)
     const end = dateRange.end instanceof Date ? dateRange.end : new Date(dateRange.end)
-    
+
     // Add 1 to include both start and end weeks
     numPeriods = Math.max(1, differenceInWeeks(end, start) + 1)
   } else {
@@ -47,10 +47,10 @@ export function calculateResourceUtilization(
     }
     numPeriods = Math.max(1, timePeriodsSet.size)
   }
-  
+
   // Track employee hours
   const employeeAssignedHours = new Map<string, number>()
-  
+
   // Sum hours per employee
   for (const assignment of assignments) {
     employeeAssignedHours.set(
@@ -58,18 +58,18 @@ export function calculateResourceUtilization(
       (employeeAssignedHours.get(assignment.employeeId) || 0) + assignment.hours
     )
   }
-  
+
   // Calculate total capacity: sum(employee.maxHours) * numPeriods
   let totalMaxCapacity = 0
   let totalAssignedHours = 0
-  
+
   for (const employee of employees) {
     totalMaxCapacity += employee.maxHours * numPeriods
     totalAssignedHours += employeeAssignedHours.get(employee.id) || 0
   }
-  
+
   // Return percentage (0-100)
-  return totalMaxCapacity > 0 
+  return totalMaxCapacity > 0
     ? Math.round((totalAssignedHours / totalMaxCapacity) * 100)
     : 0
 }
