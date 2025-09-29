@@ -84,6 +84,22 @@ export function OptimizationModal({ onClose }: OptimizationModalProps) {
   }), [filteredData, skills, teams])
 
   const handleOptimize = async () => {
+    console.log('=== MODAL OPTIMIZATION START ===')
+    console.log('Filtered data being sent to optimizer:')
+    console.log('  Employees:', filteredData.employees.length, filteredData.employees.map(e => e.name))
+    console.log('  Projects:', filteredData.projects.length)
+    console.log('  Assignments:', filteredData.assignments.length)
+
+    // Check for placeholders in filtered assignments
+    const placeholders = filteredData.assignments.filter(a =>
+      !a.employeeId || a.employeeId === 'Placeholder' ||
+      a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder ')
+    )
+    console.log('  Placeholders in filtered data:', placeholders.length)
+    placeholders.forEach(p => {
+      console.log(`    - ID: "${p.id}", Project: ${p.projectId}, Week: ${p.week}, Employee: "${p.employeeId}"`)
+    })
+
     setIsOptimizing(true)
     setProgress(0)
 
@@ -122,12 +138,35 @@ export function OptimizationModal({ onClose }: OptimizationModalProps) {
   const handleApply = () => {
     if (!results) return
 
-    // Create a set of replaced placeholders for efficient lookup
-    const replacedPlaceholders = new Set<string>()
-    results.suggestions.forEach(suggestion => {
-      // Create a unique key for each placeholder that was replaced
-      replacedPlaceholders.add(`${suggestion.projectId}-${suggestion.week}`)
+    console.log('=== OPTIMIZATION APPLY DEBUG ===')
+    console.log('Total suggestions:', results.suggestions.length)
+    console.log('Total placeholders found:', results.totalPlaceholders)
+    console.log('Unassigned placeholders:', results.unassignedPlaceholders)
+
+    // Log the actual suggestions to see what we're replacing
+    console.log('Suggestions detail:')
+    results.suggestions.forEach((s, i) => {
+      console.log(`  ${i+1}. Original ID: "${s.originalAssignmentId}" -> Employee: ${s.suggestedEmployeeName}`)
     })
+
+    // Log all placeholder assignments before filtering
+    const placeholderAssignments = allAssignments.filter(a =>
+      !a.employeeId || a.employeeId === 'Placeholder' ||
+      a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder ')
+    )
+    console.log('Placeholder assignments before apply:', placeholderAssignments.length)
+    placeholderAssignments.forEach(p => {
+      console.log(`  - ID: ${p.id}, Project: ${p.projectId}, Week: ${p.week}, Employee: ${p.employeeId}`)
+    })
+
+    // Create a set of replaced placeholder IDs for efficient lookup
+    const replacedPlaceholderIds = new Set<string>()
+    results.suggestions.forEach(suggestion => {
+      console.log(`Suggestion: Replacing assignment ID "${suggestion.originalAssignmentId}" with employee ${suggestion.suggestedEmployeeName}`)
+      // Track the specific assignment ID that was replaced
+      replacedPlaceholderIds.add(suggestion.originalAssignmentId)
+    })
+    console.log('Replaced placeholder IDs:', Array.from(replacedPlaceholderIds))
 
     // Keep non-placeholder assignments and unreplaced placeholders from ALL assignments
     const filtered = allAssignments.filter(a => {
@@ -142,32 +181,51 @@ export function OptimizationModal({ onClose }: OptimizationModalProps) {
         return true
       }
 
-      // For placeholders, check if they were replaced
-      const placeholderKey = `${a.projectId}-${a.week || a.date}`
-      return !replacedPlaceholders.has(placeholderKey)
+      // For placeholders, check if this specific one was replaced
+      const shouldKeep = !replacedPlaceholderIds.has(a.id)
+      console.log(`  Placeholder ${a.id}: ${shouldKeep ? 'KEEP' : 'REMOVE'} (in replaced set: ${replacedPlaceholderIds.has(a.id)})`)
+      return shouldKeep
+    })
+
+    console.log('Filtered assignments count (before adding suggestions):', filtered.length)
+    const remainingPlaceholders = filtered.filter(a =>
+      !a.employeeId || a.employeeId === 'Placeholder' ||
+      a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder ')
+    )
+    console.log('Remaining placeholders after filter:', remainingPlaceholders.length)
+    remainingPlaceholders.forEach(p => {
+      console.log(`  - Kept: ID: ${p.id}, Project: ${p.projectId}, Week: ${p.week}`)
     })
 
     // Add suggested assignments
+    console.log('Adding suggested assignments:')
     results.suggestions.forEach(suggestion => {
-      // Convert week string (e.g., "JAN 1") to date format (yyyy-MM-dd)
-      // The week field in placeholders should already be in the correct format
-      // but we need to ensure date field is properly set
-      const assignment = allAssignments.find(a =>
-        a.projectId === suggestion.projectId &&
-        a.week === suggestion.week &&
-        (!a.employeeId || a.employeeId === 'Placeholder' ||
-         a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder '))
-      )
+      // Find the original assignment by its ID to preserve its data
+      const originalAssignment = allAssignments.find(a => a.id === suggestion.originalAssignmentId)
 
-      filtered.push({
+      if (!originalAssignment) {
+        console.warn(`Could not find original assignment with ID: ${suggestion.originalAssignmentId}`)
+      }
+
+      const newAssignment = {
         id: `${suggestion.suggestedEmployeeId}-${suggestion.projectId}-${suggestion.week}`,
         employeeId: suggestion.suggestedEmployeeId,
         projectId: suggestion.projectId,
         week: suggestion.week,
-        date: assignment?.date || suggestion.week, // Use the original placeholder's date field if available
+        date: originalAssignment?.date || suggestion.week, // Use the original placeholder's date field if available
         hours: suggestion.originalHours,
-      })
+      }
+      console.log(`  - Adding: ${newAssignment.id} for employee ${newAssignment.employeeId}`)
+      filtered.push(newAssignment)
     })
+
+    console.log('Final filtered assignments count:', filtered.length)
+    const finalPlaceholders = filtered.filter(a =>
+      !a.employeeId || a.employeeId === 'Placeholder' ||
+      a.employeeId === 'placeholder' || a.employeeId.startsWith('Placeholder ')
+    )
+    console.log('Final placeholders count:', finalPlaceholders.length)
+    console.log('=== END DEBUG ===')
 
     // Update the store with ALL data (not just filtered)
     useScheduleStore.getState().loadData({
@@ -213,6 +271,22 @@ export function OptimizationModal({ onClose }: OptimizationModalProps) {
                 </div>
               ) : (
                 <>
+                  {/* Warning if some placeholders couldn't be assigned */}
+                  {results.unassignedPlaceholders > 0 && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-amber-800 font-medium">
+                          Not all placeholders could be assigned
+                        </p>
+                        <p className="text-sm text-amber-700 mt-1">
+                          {results.unassignedPlaceholders} of {results.totalPlaceholders} placeholder{results.totalPlaceholders !== 1 ? 's' : ''} remain unassigned due to insufficient available employees
+                          {selectedTeam !== 'All Teams' && ` in the ${selectedTeam} team`}.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary Metrics */}
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                     <div className="grid grid-cols-3 gap-4 text-sm">

@@ -8,6 +8,7 @@ interface OptimizationWeights {
 }
 
 export interface PlaceholderSuggestion {
+  originalAssignmentId: string  // ID of the placeholder being replaced
   projectId: string
   projectName: string
   week: string
@@ -22,6 +23,8 @@ export interface PlaceholderSuggestion {
 export interface OptimizationResult {
   suggestions: PlaceholderSuggestion[]
   totalScore: number
+  totalPlaceholders: number
+  unassignedPlaceholders: number
   metrics: {
     currentOvertimeHours: number
     currentUtilization: number
@@ -50,16 +53,26 @@ export async function optimizeSchedule(
       a.employeeId.startsWith('Placeholder ')  // Handles "Placeholder 1", "Placeholder 2", etc.
     )
   )
+
+  console.log('=== OPTIMIZER DEBUG ===')
+  console.log('Total assignments:', data.assignments.length)
+  console.log('Total employees available:', data.employees.length)
+  console.log('Placeholder assignments found:', placeholderAssignments.length)
+  placeholderAssignments.forEach(p => {
+    console.log(`  - Placeholder: ID="${p.id}", Project="${p.projectId}", Week="${p.week}", Employee="${p.employeeId}"`)
+  })
   
   if (placeholderAssignments.length === 0) {
     // No placeholders to optimize
     return {
       suggestions: [],
       totalScore: 0,
+      totalPlaceholders: 0,
+      unassignedPlaceholders: 0,
       metrics: {
         currentOvertimeHours: calculateTotalOvertime(data.employees, data.assignments),
         currentUtilization: calculateResourceUtilization(data.employees, data.assignments, dateRange),
-        currentSkillsMatch: calculateSkillsMatch(data.assignments, 
+        currentSkillsMatch: calculateSkillsMatch(data.assignments,
           new Map(data.employees.map(e => [e.id, e])),
           new Map(data.projects.map(p => [p.id, p]))
         ),
@@ -89,20 +102,41 @@ export async function optimizeSchedule(
     }
     placeholderGroups.get(key)!.push(placeholder)
   })
-  
+
   let processedCount = 0
   for (const placeholders of placeholderGroups.values()) {
     const firstPlaceholder = placeholders[0]
     const project = projectMap.get(firstPlaceholder.projectId)
-    
+
     if (!project) continue
-    
+
     // Track already assigned employees for THIS specific project-week combination
     // This ensures different employees for multiple placeholders in the same week
     const assignedEmployeesForWeek = new Set<string>()
-    
+
+    // IMPORTANT: Also check for existing non-placeholder assignments in this project-week
+    // to avoid assigning employees who are already working on this project
+    const existingAssignmentsForWeek = data.assignments.filter(a =>
+      a.projectId === firstPlaceholder.projectId &&
+      (a.week === firstPlaceholder.week || a.date === firstPlaceholder.date) &&
+      a.employeeId && // Has an employee assigned
+      a.employeeId !== 'Placeholder' &&
+      a.employeeId !== 'placeholder' &&
+      !a.employeeId.startsWith('Placeholder ')
+    )
+
+    // Add already-assigned employees to the exclusion set
+    existingAssignmentsForWeek.forEach(a => {
+      if (a.employeeId) {
+        assignedEmployeesForWeek.add(a.employeeId)
+        console.log(`  Employee ${a.employeeId} already assigned to project ${a.projectId} in week ${a.week || a.date}`)
+      }
+    })
+
     // For each placeholder in this project-week, find a unique employee
     for (const placeholder of placeholders) {
+      console.log(`Processing placeholder: ID="${placeholder.id}", Project="${placeholder.projectId}", Week="${placeholder.week}", Employee="${placeholder.employeeId}"`)
+
       // Find best employee based on algorithm, excluding already assigned ones
       const bestEmployee = await findBestEmployee(
         placeholder,
@@ -111,13 +145,14 @@ export async function optimizeSchedule(
         weights,
         skillScoreMatrix,
         algorithm,
-        assignedEmployeesForWeek  // Pass employees already assigned in this week
+        assignedEmployeesForWeek  // Pass employees already assigned in this week (including existing assignments)
       )
-      
+
       if (bestEmployee) {
+        console.log(`  -> Found employee: ${bestEmployee.name} (ID: ${bestEmployee.id})`)
         // Mark this employee as assigned for this week
         assignedEmployeesForWeek.add(bestEmployee.id)
-        
+
         // Calculate individual scores for this assignment
         const scores = calculateAssignmentScores(
           bestEmployee,
@@ -126,8 +161,9 @@ export async function optimizeSchedule(
           data,
           skillScoreMatrix
         )
-        
+
         suggestions.push({
+          originalAssignmentId: placeholder.id,
           projectId: project.id,
           projectName: project.name,
           week: placeholder.week,
@@ -138,6 +174,9 @@ export async function optimizeSchedule(
           utilizationScore: scores.utilization,
           skillsScore: scores.skills,
         })
+        console.log(`  -> Added suggestion with originalAssignmentId: "${placeholder.id}"`)
+      } else {
+        console.log(`  -> No employee available (all ${data.employees.length} employees already assigned or excluded)`)
       }
       
       processedCount++
@@ -155,6 +194,8 @@ export async function optimizeSchedule(
   return {
     suggestions,
     totalScore: calculateTotalScore(suggestions, weights),
+    totalPlaceholders: placeholderAssignments.length,
+    unassignedPlaceholders: placeholderAssignments.length - suggestions.length,
     metrics: {
       currentOvertimeHours: calculateTotalOvertime(data.employees, data.assignments),
       currentUtilization: calculateResourceUtilization(data.employees, data.assignments, dateRange),
